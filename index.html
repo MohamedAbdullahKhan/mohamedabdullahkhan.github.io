@@ -90,26 +90,22 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 }
 
 /* ============================================================
-   PAGE BOOT-SCAN — a full-viewport line that sweeps top-to-bottom
-   once when the page loads, like a document/security scan pass.
-   Separate from .scan-line (which stays scoped to the photo).
-   Removed from the DOM by JS once the animation finishes.
+   PAGE SCAN — a full-viewport line that continuously bounces
+   top-to-bottom-to-top, like a live security/document scanner.
+   Runs permanently on every theme (never hidden by a theme
+   override — this one is intentionally universal). Separate
+   from .scan-line, which stays scoped to the photo only.
    ============================================================ */
 .page-scan{
-  position:fixed;left:0;right:0;top:0;height:2px;z-index:999;pointer-events:none;
-  background:linear-gradient(90deg,transparent 2%,rgba(var(--accent-rgb),.9) 50%,transparent 98%);
-  box-shadow:0 0 16px rgba(var(--accent-rgb),.8),0 0 44px rgba(var(--accent-rgb),.4);
-  animation:pageScanSweep 1.9s cubic-bezier(.65,0,.35,1) forwards;
+  position:fixed;left:0;right:0;top:0;height:2px;z-index:40;pointer-events:none;
+  background:linear-gradient(90deg,transparent 2%,rgba(var(--accent-rgb),.8) 50%,transparent 98%);
+  box-shadow:0 0 12px rgba(var(--accent-rgb),.65),0 0 30px rgba(var(--accent-rgb),.28);
+  animation:pageScanLoop 6.5s ease-in-out infinite;
 }
-.page-scan::before{
-  content:'';position:absolute;left:0;right:0;top:-100vh;bottom:0;
-  background:linear-gradient(to bottom,transparent,rgba(var(--accent-rgb),.05) 96%,rgba(var(--accent-rgb),.1) 100%);
-}
-@keyframes pageScanSweep{
-  0%{top:0;opacity:0}
-  6%{opacity:1}
-  94%{opacity:1}
-  100%{top:100%;opacity:0}
+@keyframes pageScanLoop{
+  0%{top:0}
+  50%{top:calc(100vh - 2px)}
+  100%{top:0}
 }
 @media (prefers-reduced-motion:reduce){.page-scan{display:none}}
 
@@ -1578,13 +1574,6 @@ a.c-link.contact-item{
 <script>
 (function(){
   'use strict';
-
-  /* ---------- PAGE BOOT-SCAN — remove once the one-time sweep finishes ---------- */
-  var pageScan = document.getElementById('pageScan');
-  if(pageScan){
-    pageScan.addEventListener('animationend', function(){ pageScan.remove(); });
-    setTimeout(function(){ if(pageScan && pageScan.parentNode) pageScan.remove(); }, 2500);
-  }
 
   /* ---------- THEME SWITCHING ---------- */
   var root = document.documentElement;
