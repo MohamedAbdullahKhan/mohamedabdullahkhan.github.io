@@ -107,7 +107,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   50%{top:calc(100vh - 2px)}
   100%{top:0}
 }
-@media (prefers-reduced-motion:reduce){.page-scan{display:none}}
+/* Deliberately NOT gated by prefers-reduced-motion — unlike every other
+   animation in this file. This is the signature effect and must always
+   render identically on mobile and desktop regardless of OS/browser
+   motion settings (root cause of "works on mobile, not on PC" reports:
+   desktop browsers/OSes default prefers-reduced-motion differently). */
 
 /* ============================================================
    THEME TOGGLE — a single in-nav button (works at every screen
@@ -226,6 +230,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .availability-chip .dot{width:7px;height:7px;border-radius:50%;background:#5ee08a;animation:gdot 2.5s ease-in-out infinite}
 @keyframes gdot{0%,100%{box-shadow:0 0 3px #5ee08a}50%{box-shadow:0 0 14px #5ee08a,0 0 26px rgba(94,224,138,.4)}}
 .hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.14em;color:var(--accent-2);text-transform:uppercase;margin-bottom:10px;display:block}
+.term-cursor{display:inline-block;width:8px;height:13px;background:var(--accent-2);margin-left:2px;vertical-align:-2px;animation:cursorBlink 1.1s steps(1) infinite}
+@keyframes cursorBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
 .hero-name{font-size:clamp(34px,4.4vw,54px);margin-bottom:6px}
 .hero-role{font-size:clamp(16px,2vw,20px);color:var(--text-dim);font-weight:500;margin-bottom:10px}
 .hero-location{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--text-mute);margin-bottom:28px}
@@ -374,6 +380,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .cred-icon{width:30px;height:30px;color:var(--accent-2);margin-bottom:10px}
 .cred-name{font-size:13.5px;font-weight:700;color:var(--text-hi);line-height:1.3}
 .cred-issuer{font-size:11.5px;color:var(--text-mute);margin-top:4px}
+.cred-view{
+  display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--accent-2);margin-top:12px;opacity:0;transform:translateY(3px);
+  transition:opacity .2s ease,transform .2s ease;
+}
+.cred:hover .cred-view,.cred:focus-visible .cred-view{opacity:1;transform:translateY(0)}
 a.c-link{
   display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-size:13px;font-weight:600;color:var(--accent-2);
   padding:9px 16px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);
@@ -487,7 +499,21 @@ a.c-link.contact-item{
   padding:22px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;
   transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;
   backdrop-filter:blur(var(--blur)) saturate(var(--backdrop-sat));-webkit-backdrop-filter:blur(var(--blur)) saturate(var(--backdrop-sat));
+  opacity:0;animation:tileIn .55s cubic-bezier(.2,.7,.3,1) forwards;
 }
+.bento-tile:nth-child(1){animation-delay:.02s}
+.bento-tile:nth-child(2){animation-delay:.07s}
+.bento-tile:nth-child(3){animation-delay:.12s}
+.bento-tile:nth-child(4){animation-delay:.17s}
+.bento-tile:nth-child(5){animation-delay:.22s}
+.bento-tile:nth-child(6){animation-delay:.27s}
+.bento-tile:nth-child(7){animation-delay:.32s}
+.bento-tile:nth-child(8){animation-delay:.37s}
+.bento-tile:nth-child(9){animation-delay:.42s}
+.bento-tile:nth-child(10){animation-delay:.47s}
+.bento-tile:nth-child(11){animation-delay:.52s}
+.bento-tile:nth-child(12){animation-delay:.57s}
+@keyframes tileIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .bento-tile:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:var(--shadow-card-hover)}
 .bento-tile[data-expand]{cursor:pointer}
 .bento-tile[data-expand]::after{
@@ -600,6 +626,9 @@ a.c-link.contact-item{
   .edu-item,.skill-category,a.c-link.contact-item,.bento-tile{background:var(--panel2)}
 }
 
+[data-theme="original"] .stat-card,[data-theme="original"] .qr-card{animation:goldBreath 4.5s ease-in-out infinite}
+@keyframes goldBreath{0%,100%{box-shadow:var(--shadow-card)}50%{box-shadow:var(--shadow-card),0 0 22px rgba(var(--accent-rgb),.22)}}
+
 /* ============================================================
    THEME 1 — SKEUOMORPHISM
    Warm leather + brushed metal. Multi-layer realistic shadows,
@@ -621,6 +650,13 @@ a.c-link.contact-item{
 [data-theme="skeuomorphism"] .section-toggle.active,[data-theme="skeuomorphism"] .exp-hd.open-hd{box-shadow:inset 0 3px 8px rgba(0,0,0,.5), inset 0 -1px 0 rgba(255,255,255,.05)}
 [data-theme="skeuomorphism"] ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent-2),var(--accent-3))}
 [data-theme="skeuomorphism"] .theme-swatch[data-swatch="skeuomorphism"]{box-shadow:inset 0 2px 3px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.4)}
+[data-theme="skeuomorphism"] .exp-card,[data-theme="skeuomorphism"] .project-card,[data-theme="skeuomorphism"] .ach-card,[data-theme="skeuomorphism"] .cred{position:relative;overflow:hidden}
+[data-theme="skeuomorphism"] .exp-card::after,[data-theme="skeuomorphism"] .project-card::after,[data-theme="skeuomorphism"] .ach-card::after,[data-theme="skeuomorphism"] .cred::after{
+  content:'';position:absolute;top:0;left:-160%;width:55%;height:100%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.09),transparent);
+  animation:metalGleam 7s ease-in-out infinite;
+}
+@keyframes metalGleam{0%,78%,100%{left:-160%}42%{left:160%}}
 
 /* ============================================================
    THEME 2 — NEOMORPHISM (soft UI)
@@ -642,6 +678,11 @@ a.c-link.contact-item{
 }
 [data-theme="neomorphism"] .theme-btn[aria-pressed="true"]{box-shadow:inset 4px 4px 10px rgba(0,0,0,.5), inset -4px -4px 10px rgba(255,255,255,.02);background:none}
 [data-theme="neomorphism"] .tag,[data-theme="neomorphism"] .availability-chip{box-shadow:3px 3px 7px rgba(0,0,0,.5),-3px -3px 7px rgba(255,255,255,.02)}
+[data-theme="neomorphism"] .stat-card,[data-theme="neomorphism"] .cred,[data-theme="neomorphism"] .ach-card{animation:softBreath 5.5s ease-in-out infinite}
+@keyframes softBreath{
+  0%,100%{box-shadow:8px 8px 18px rgba(0,0,0,.55), -8px -8px 18px rgba(255,255,255,.025)}
+  50%{box-shadow:5px 5px 12px rgba(0,0,0,.45), -5px -5px 12px rgba(255,255,255,.018)}
+}
 
 /* ============================================================
    THEME 3 — GLASSMORPHISM
@@ -661,6 +702,11 @@ a.c-link.contact-item{
     radial-gradient(circle at 85% 15%, rgba(94,224,224,.32), transparent 42%),
     radial-gradient(circle at 50% 90%, rgba(232,109,193,.3), transparent 45%);
   background-attachment:fixed;
+  animation:blobDrift 24s ease-in-out infinite alternate;
+}
+@keyframes blobDrift{
+  0%{background-position:0% 0%,0% 0%,0% 0%}
+  100%{background-position:7% 9%,-8% 6%,5% -7%}
 }
 
 /* ============================================================
@@ -680,6 +726,8 @@ a.c-link.contact-item{
 [data-theme="claymorphism"] .photo-frame{clip-path:none;border-radius:var(--radius-lg)}
 [data-theme="claymorphism"] .corner-deco{display:none}
 [data-theme="claymorphism"] ::selection{background:var(--accent);color:#fff}
+[data-theme="claymorphism"] .photo-frame{animation:clayFloat 5s ease-in-out infinite}
+@keyframes clayFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 
 /* ============================================================
    THEME 5 — MINIMALISM
@@ -706,6 +754,12 @@ a.c-link.contact-item{
 [data-theme="minimalism"] .btn-primary:hover{background:transparent;color:var(--accent);border:1px solid var(--accent)}
 [data-theme="minimalism"] .tag{background:transparent}
 [data-theme="minimalism"] .theme-swatch[data-swatch="minimalism"]{background:#fafaf9}
+[data-theme="minimalism"] .nav-links a{position:relative}
+[data-theme="minimalism"] .nav-links a::after{
+  content:'';position:absolute;left:0;bottom:-4px;width:0;height:1px;background:var(--accent);
+  transition:width .25s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="minimalism"] .nav-links a:hover::after,[data-theme="minimalism"] .nav-links a.active-link::after{width:100%}
 
 
 /* ============================================================
@@ -731,9 +785,12 @@ a.c-link.contact-item{
   background-attachment:fixed;
 }
 [data-theme="maximalism"] h1,[data-theme="maximalism"] h2,[data-theme="maximalism"] .stat-value{
-  background:linear-gradient(100deg,var(--accent-2),var(--pink) 55%,var(--cyan));
+  background:linear-gradient(100deg,var(--accent-2),var(--pink) 45%,var(--cyan) 75%,var(--accent-2));
+  background-size:250% auto;
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  animation:gradientShift 6s linear infinite;
 }
+@keyframes gradientShift{0%{background-position:0% center}100%{background-position:250% center}}
 [data-theme="maximalism"] .exp-card,[data-theme="maximalism"] .ach-card,[data-theme="maximalism"] .project-card,[data-theme="maximalism"] .cred{
   border-radius:4px 18px 4px 18px;border-color:var(--accent-border)
 }
@@ -758,6 +815,11 @@ a.c-link.contact-item{
 }
 [data-theme="brutalism"] *{border-radius:0!important}
 [data-theme="brutalism"] h1,[data-theme="brutalism"] h2,[data-theme="brutalism"] h3,[data-theme="brutalism"] .nav-logo{text-transform:uppercase;letter-spacing:-.01em}
+[data-theme="brutalism"] .exp-card,[data-theme="brutalism"] .project-card,[data-theme="brutalism"] .ach-card,
+[data-theme="brutalism"] .cred,[data-theme="brutalism"] .stat-card,[data-theme="brutalism"] .btn-primary,[data-theme="brutalism"] .btn-ghost{
+  transition:transform .09s steps(3),box-shadow .09s steps(3)!important;
+}
+[data-theme="brutalism"] .nav-logo::after{content:'_';margin-left:2px;animation:cursorBlink 1s steps(1) infinite}
 [data-theme="brutalism"] .nav-inner{border:3px solid #000;box-shadow:none;border-radius:0}
 [data-theme="brutalism"] .section-toggle,
 [data-theme="brutalism"] .exp-card,[data-theme="brutalism"] .stat-card,[data-theme="brutalism"] .cred,
@@ -798,6 +860,13 @@ a.c-link.contact-item{
     radial-gradient(circle at 80% 70%, rgba(58,159,184,.3), transparent 45%);
   background-attachment:fixed;
 }
+[data-theme="liquid-glass"] .exp-card,[data-theme="liquid-glass"] .stat-card,[data-theme="liquid-glass"] .ach-card,[data-theme="liquid-glass"] .cred{
+  animation:wetShimmer 4.5s ease-in-out infinite;
+}
+@keyframes wetShimmer{
+  0%,100%{box-shadow:inset 0 2px 0 rgba(255,255,255,.5), 0 8px 30px rgba(0,0,0,.5)}
+  50%{box-shadow:inset 0 2px 0 rgba(255,255,255,.8), 0 8px 30px rgba(0,0,0,.5)}
+}
 
 /* ============================================================
    THEME 9 — BENTO GRID
@@ -831,6 +900,11 @@ a.c-link.contact-item{
   background-image:linear-gradient(160deg, rgba(143,162,255,.16), transparent 55%),
     radial-gradient(circle at 85% 80%, rgba(100,120,224,.2), transparent 50%);
   background-attachment:fixed;
+  animation:spatialDrift 28s ease-in-out infinite alternate;
+}
+@keyframes spatialDrift{
+  0%{background-position:0% 0%,0% 0%}
+  100%{background-position:-6% 7%,8% -5%}
 }
 
 /* ============================================================
@@ -857,13 +931,6 @@ a.c-link.contact-item{
 <div class="page-scan" id="pageScan" aria-hidden="true"></div>
 <a class="skip-link" href="#main">Skip to content</a>
 
-<!-- ============================================================
-     THEME RAIL — desktop left sidebar. 11 options: the baseline
-     "Original" plus the 10 requested reskins. Picking one sets
-     data-theme on <html>, which re-points every var(--x) in the
-     stylesheet — no other DOM change needed except for Bento
-     Grid, which additionally swaps the structural view (see JS).
-     ============================================================ -->
 <!-- ============================================================
      THEME POPOVER — opened from the toggle button inside the nav.
      One set of 11 buttons, works identically at every screen size.
@@ -941,7 +1008,7 @@ a.c-link.contact-item{
     <div class="hero-inner">
       <div class="hero-text">
         <span class="availability-chip"><span class="dot"></span>Available · Dubai, UAE</span>
-        <span class="hero-eyebrow mono">PORTFOLIO — SECURITY &amp; INFRASTRUCTURE</span>
+        <span class="hero-eyebrow mono">PORTFOLIO — SECURITY &amp; INFRASTRUCTURE<span class="term-cursor" aria-hidden="true"></span></span>
         <h1 class="hero-name">Mohamed Abdullah Khan</h1>
         <p class="hero-role">Senior Executive — IT System / Security Engineer</p>
         <div class="hero-location">
@@ -951,10 +1018,10 @@ a.c-link.contact-item{
         <p class="hero-desc">Designing and enforcing enterprise-grade security architectures across endpoints, networks, cloud platforms and privileged access — including Sophos MDR, DLP, XDR, EDR and PAM — safeguarding critical infrastructure for leading organizations in the UAE.</p>
 
         <div class="hero-stats">
-          <div class="stat-card"><div class="stat-value">5+</div><div class="stat-label">Years Experience</div></div>
-          <div class="stat-card"><div class="stat-value">4</div><div class="stat-label">Companies Served</div></div>
-          <div class="stat-card"><div class="stat-value">98%</div><div class="stat-label">DLP Prevention Rate</div></div>
-          <div class="stat-card"><div class="stat-value">40+</div><div class="stat-label">Technologies Deployed</div></div>
+          <div class="stat-card"><div class="stat-value" data-count="5" data-suffix="+">0+</div><div class="stat-label">Years Experience</div></div>
+          <div class="stat-card"><div class="stat-value" data-count="4" data-suffix="">0</div><div class="stat-label">Companies Served</div></div>
+          <div class="stat-card"><div class="stat-value" data-count="98" data-suffix="%">0%</div><div class="stat-label">DLP Prevention Rate</div></div>
+          <div class="stat-card"><div class="stat-value" data-count="40" data-suffix="+">0+</div><div class="stat-label">Technologies Deployed</div></div>
         </div>
 
         <div class="hero-actions">
@@ -1161,21 +1228,24 @@ a.c-link.contact-item{
 
           <div class="cred-label">Certifications</div>
           <div class="cred-grid">
-            <div class="cred">
+            <a class="cred" href="https://github.com/MohamedAbdullahKhan/Certificates/blob/main/eif-certificate%20Ethical%20Hacking%20%26%20Penetration%20Testing.pdf" target="_blank" rel="noopener">
               <svg class="cred-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 6v6c0 5 3.8 9.4 9 10 5.2-.6 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg>
               <div class="cred-name">Ethical Hacking &amp; Penetration Testing</div>
               <div class="cred-issuer">Emirates Institute of Finance [EIF]</div>
-            </div>
-            <div class="cred">
+              <span class="cred-view">View certificate <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
+            </a>
+            <a class="cred" href="https://github.com/MohamedAbdullahKhan/Certificates/blob/main/eif-certificate%20Infrastructure%20%26%20Cloud%20Security.pdf" target="_blank" rel="noopener">
               <svg class="cred-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17V9l8-5 8 5v8l-8 5-8-5Z"/><path d="M12 22V12M4 9l8 3 8-3"/></svg>
               <div class="cred-name">Infrastructure &amp; Cloud Security</div>
               <div class="cred-issuer">Emirates Institute of Finance [EIF]</div>
-            </div>
-            <div class="cred">
+              <span class="cred-view">View certificate <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
+            </a>
+            <a class="cred" href="https://github.com/MohamedAbdullahKhan/Certificates/blob/main/eif-certificate%20Application%20Security.pdf" target="_blank" rel="noopener">
               <svg class="cred-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6m-6 4h4"/></svg>
               <div class="cred-name">Application Security</div>
               <div class="cred-issuer">Emirates Institute of Finance [EIF]</div>
-            </div>
+              <span class="cred-view">View certificate <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17 17 7M7 7h10v10"/></svg></span>
+            </a>
           </div>
           <a class="c-link" href="https://github.com/MohamedAbdullahKhan/Certificates" target="_blank" rel="noopener">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18c-4.5 1.5-4.5-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
@@ -1455,10 +1525,10 @@ a.c-link.contact-item{
         <div class="chip chip-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div>
         <h3>By the Numbers</h3>
         <div class="bento-stats-mini">
-          <div><strong>5+</strong><span>Years</span></div>
-          <div><strong>4</strong><span>Companies</span></div>
-          <div><strong>98%</strong><span>DLP Rate</span></div>
-          <div><strong>40+</strong><span>Tech</span></div>
+          <div><strong data-count="5" data-suffix="+">0+</strong><span>Years</span></div>
+          <div><strong data-count="4" data-suffix="">0</strong><span>Companies</span></div>
+          <div><strong data-count="98" data-suffix="%">0%</strong><span>DLP Rate</span></div>
+          <div><strong data-count="40" data-suffix="+">0+</strong><span>Tech</span></div>
         </div>
       </div>
 
@@ -1743,6 +1813,37 @@ a.c-link.contact-item{
       if(popover && popover.classList.contains('open')) closeThemePopover();
     }
   });
+
+  /* ---------- COUNT-UP STATS — professional dashboard-style reveal ---------- */
+  function animateCount(el){
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    if(isNaN(target)) return;
+    var suffix = el.getAttribute('data-suffix') || '';
+    var start = null;
+    var duration = 1300;
+    function tick(now){
+      if(start === null) start = now;
+      var p = Math.min((now - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased) + suffix;
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  var countTargets = document.querySelectorAll('[data-count]');
+  if('IntersectionObserver' in window && countTargets.length){
+    var countObserver = new IntersectionObserver(function(entries, obs){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){ animateCount(entry.target); obs.unobserve(entry.target); }
+      });
+    }, {threshold:0.5});
+    countTargets.forEach(function(el){ countObserver.observe(el); });
+  } else {
+    countTargets.forEach(function(el){
+      var t = el.getAttribute('data-count'), s = el.getAttribute('data-suffix') || '';
+      if(t) el.textContent = t + s;
+    });
+  }
 
   /* ---------- SCROLL REVEAL (progressive enhancement — content is
      fully visible without JS; this only adds the fade-in) ---------- */
