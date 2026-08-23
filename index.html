@@ -33,6 +33,32 @@ body{
   transition:background .5s ease,color .5s ease;
 }
 
+/* ============================================================
+   SITEWIDE AMBIENT BACKGROUND — new this session. A very faint,
+   slowly-drifting dot-grid fixed behind every section, on every
+   theme (color derives from --accent-rgb, so it re-tints itself
+   automatically on theme switch, same pattern already used by
+   .dot-deco). This is the answer to "the whole page feels static":
+   unlike hover/scroll-triggered effects, this is always on screen
+   no matter where the visitor is on the page. Kept extremely subtle
+   (5% opacity) so it reads as texture, not noise, and never
+   competes with foreground content. position:fixed + no z-index
+   keeps it pinned to the viewport and painted behind all normal-flow
+   content automatically (DOM order), without touching the stacking
+   of .page-scan (z-index:40) or the nav (z-index:70).
+   ============================================================ */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(var(--accent-rgb),.45) 1px,transparent 1px);
+  background-size:34px 34px;
+  opacity:.05;
+  animation:bgGridDrift 45s linear infinite;
+}
+@keyframes bgGridDrift{
+  0%{background-position:0 0}
+  100%{background-position:340px 340px}
+}
+
 h1,h2,h3,h4{
   font-family:var(--heading-font);
   color:var(--text-hi);
@@ -107,11 +133,32 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   50%{top:calc(100vh - 2px)}
   100%{top:0}
 }
-/* Deliberately NOT gated by prefers-reduced-motion — unlike every other
+/* Deliberately exempt from prefers-reduced-motion — unlike every other
    animation in this file. This is the signature effect and must always
-   render identically on mobile and desktop regardless of OS/browser
-   motion settings (root cause of "works on mobile, not on PC" reports:
-   desktop browsers/OSes default prefers-reduced-motion differently). */
+   render identically on mobile and desktop.
+   REAL FIX (this session): the exemption above was only ever a COMMENT —
+   it never actually stopped the global rule near the top of this
+   stylesheet (`*,*::before,*::after{animation-duration:.001ms!important;
+   animation-iteration-count:1!important}` inside
+   `@media (prefers-reduced-motion:reduce)`) from also matching .page-scan,
+   because a universal selector carrying !important still beats a normal
+   (non-!important) declaration no matter how specific the selector is.
+   So on ANY browser/OS reporting reduce-motion — common on many Windows
+   and Linux desktop setups (an accessibility/performance toggle), rare by
+   default on phones — the bar was silently truncated to a single 0.001ms
+   iteration and froze at top:0, invisible behind the nav. That is the
+   real root cause of "works on mobile, not on PC", not a mobile-vs-desktop
+   rendering difference. The block below is what actually restores it: it
+   matches !important with !important and wins on selector specificity. */
+@media (prefers-reduced-motion:reduce){
+  .page-scan{
+    animation-name:pageScanLoop!important;
+    animation-duration:6.5s!important;
+    animation-timing-function:ease-in-out!important;
+    animation-iteration-count:infinite!important;
+    animation-play-state:running!important;
+  }
+}
 
 /* ============================================================
    THEME TOGGLE — a single in-nav button (works at every screen
@@ -184,8 +231,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .nav-logo{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;color:var(--text-hi);letter-spacing:.02em}
 .nav-logo span{color:var(--accent)}
 .nav-links{display:flex;gap:26px}
-.nav-links a{font-size:13.5px;font-weight:500;color:var(--text-dim);transition:color .2s}
+.nav-links a{position:relative;font-size:13.5px;font-weight:500;color:var(--text-dim);transition:color .2s;padding-bottom:5px}
 .nav-links a:hover,.nav-links a.active-link{color:var(--accent-2)}
+.nav-links a::after{
+  content:'';position:absolute;left:0;bottom:-2px;width:0;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  box-shadow:0 0 8px rgba(var(--accent-rgb),.65);
+  transition:width .32s cubic-bezier(.4,0,.2,1);
+}
+.nav-links a:hover::after,.nav-links a.active-link::after{width:100%}
 .nav-cta{display:flex;align-items:center;gap:10px}
 .nav-burger{display:none;width:36px;height:36px;border-radius:9px;background:var(--accent-faint);align-items:center;justify-content:center;flex-direction:column;gap:4px}
 .nav-burger span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .25s}
@@ -264,9 +318,13 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   position:absolute;bottom:14px;left:14px;font-family:'JetBrains Mono',monospace;
   font-size:9.5px;color:rgba(255,255,255,.55);letter-spacing:.05em;
 }
-.corner-deco{position:absolute;width:22px;height:22px;border-color:var(--accent-2);opacity:.85}
+.corner-deco{position:absolute;width:22px;height:22px;border-color:var(--accent-2);opacity:.85;filter:drop-shadow(0 0 0 rgba(var(--accent-rgb),0));animation:hudPulse 3.4s ease-in-out infinite}
 .corner-deco.tl{top:-8px;left:-8px;border-top:2px solid;border-left:2px solid}
-.corner-deco.br{bottom:-8px;right:-8px;border-bottom:2px solid;border-right:2px solid}
+.corner-deco.br{bottom:-8px;right:-8px;border-bottom:2px solid;border-right:2px solid;animation-delay:.4s}
+@keyframes hudPulse{
+  0%,70%,100%{opacity:.85;filter:drop-shadow(0 0 0 rgba(var(--accent-rgb),0))}
+  85%{opacity:1;filter:drop-shadow(0 0 5px rgba(var(--accent-rgb),.85))}
+}
 .scan-line{
   position:absolute;left:0;right:0;height:1px;top:10%;
   background:linear-gradient(90deg,transparent,rgba(var(--accent-rgb),.65),transparent);
@@ -277,6 +335,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   position:absolute;inset:-30px;z-index:-1;
   background-image:radial-gradient(var(--accent-border) 1.4px,transparent 1.4px);
   background-size:16px 16px;opacity:.35;pointer-events:none;
+  animation:dotDrift 12s linear infinite;
+}
+@keyframes dotDrift{
+  0%{background-position:0 0;opacity:.28}
+  50%{opacity:.5}
+  100%{background-position:16px 16px;opacity:.28}
 }
 
 .qr-card{
@@ -290,11 +354,135 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .qr-card-text .qr-title{display:block;color:var(--text-hi);font-size:13.5px;font-weight:700;margin-bottom:2px}
 
 /* ============================================================
+   HERO ENTRANCE SEQUENCE — new this session. Plays once on load,
+   not scroll-triggered (the hero is always above the fold, so
+   there's nothing to wait for). This is the single highest-impact
+   piece of motion on the page: it's the first thing 100% of
+   visitors see, on every device. Pure CSS, no JS — each element
+   fades + rises with its own delay; animation-fill-mode:both holds
+   the pre-animation state during the delay and the end state after,
+   so nothing flashes at full opacity early or reverts afterward.
+   Automatically respects prefers-reduced-motion via the existing
+   global rule (collapses to an instant, correctly-placed snap-in).
+   ============================================================ */
+@keyframes heroRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes heroRiseVisual{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.availability-chip{animation:heroRise .7s cubic-bezier(.16,1,.3,1) .05s both}
+.hero-eyebrow{animation:heroRise .7s cubic-bezier(.16,1,.3,1) .13s both}
+.hero-name{animation:heroRise .8s cubic-bezier(.16,1,.3,1) .21s both}
+.hero-role{animation:heroRise .7s cubic-bezier(.16,1,.3,1) .29s both}
+.hero-location{animation:heroRise .7s cubic-bezier(.16,1,.3,1) .36s both}
+.hero-desc{animation:heroRise .7s cubic-bezier(.16,1,.3,1) .43s both}
+.hero-stats{animation:heroRise .7s cubic-bezier(.16,1,.3,1) .5s both}
+.hero-stats .stat-card:nth-child(1){animation:heroRise .6s cubic-bezier(.16,1,.3,1) .56s both}
+.hero-stats .stat-card:nth-child(2){animation:heroRise .6s cubic-bezier(.16,1,.3,1) .61s both}
+.hero-stats .stat-card:nth-child(3){animation:heroRise .6s cubic-bezier(.16,1,.3,1) .66s both}
+.hero-stats .stat-card:nth-child(4){animation:heroRise .6s cubic-bezier(.16,1,.3,1) .71s both}
+.hero-actions{animation:heroRise .7s cubic-bezier(.16,1,.3,1) .6s both}
+.hero-visual{animation:heroRiseVisual .9s cubic-bezier(.16,1,.3,1) .3s both}
+
+/* Primary hero CTA — a soft radiating attention ring so the main
+   call-to-action reads as "alive" and inviting rather than static.
+   Uses a ::before behind the button (z-index:-1) so it never touches
+   `background`, meaning it can't conflict with any theme's own
+   button background/gradient/shadow declarations. */
+.hero-actions .btn-primary{position:relative;z-index:0}
+.hero-actions .btn-primary::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;
+  animation:ctaPulse 2.8s ease-out 1.6s infinite;
+}
+@keyframes ctaPulse{
+  0%{box-shadow:0 0 0 0 rgba(var(--accent-rgb),.5)}
+  70%{box-shadow:0 0 0 16px rgba(var(--accent-rgb),0)}
+  100%{box-shadow:0 0 0 0 rgba(var(--accent-rgb),0)}
+}
+
+/* ============================================================
    ACCORDION SECTION SHELL (used by 7 sections)
    ============================================================ */
 .page-section{margin-bottom:14px;scroll-margin-top:110px}
 .page-section.reveal-ready{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
 .page-section.in-view{opacity:1;transform:translateY(0)}
+
+/* ============================================================
+   STAGGERED CARD REVEAL — new this session. Every repeated card
+   grid in the page (experience, education, credentials, skills,
+   achievements, projects) now cascades in individually instead of
+   popping in as one flat block with its parent section. Reuses the
+   exact same .page-section.in-view trigger already wired up by the
+   existing IntersectionObserver — no JS changes needed. Respects
+   prefers-reduced-motion automatically via the global rule.
+   ============================================================ */
+@keyframes cardRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.page-section .exp-list .exp-card,
+.page-section .edu-item,
+.page-section .cred-grid .cred,
+.page-section .skills-grid .skill-category,
+.page-section .ach-stack .ach-card,
+.page-section .project-grid .project-card{opacity:0}
+.page-section.in-view .exp-list .exp-card,
+.page-section.in-view .edu-item,
+.page-section.in-view .cred-grid .cred,
+.page-section.in-view .skills-grid .skill-category,
+.page-section.in-view .ach-stack .ach-card,
+.page-section.in-view .project-grid .project-card{animation:cardRise .6s cubic-bezier(.16,1,.3,1) both}
+
+.page-section.in-view .exp-list .exp-card:nth-child(1){animation-delay:.05s}
+.page-section.in-view .exp-list .exp-card:nth-child(2){animation-delay:.14s}
+.page-section.in-view .exp-list .exp-card:nth-child(3){animation-delay:.23s}
+.page-section.in-view .exp-list .exp-card:nth-child(4){animation-delay:.32s}
+
+.page-section.in-view .cred-grid .cred:nth-child(1){animation-delay:.05s}
+.page-section.in-view .cred-grid .cred:nth-child(2){animation-delay:.13s}
+.page-section.in-view .cred-grid .cred:nth-child(3){animation-delay:.21s}
+
+.page-section.in-view .skills-grid .skill-category:nth-child(1){animation-delay:.04s}
+.page-section.in-view .skills-grid .skill-category:nth-child(2){animation-delay:.1s}
+.page-section.in-view .skills-grid .skill-category:nth-child(3){animation-delay:.16s}
+.page-section.in-view .skills-grid .skill-category:nth-child(4){animation-delay:.22s}
+.page-section.in-view .skills-grid .skill-category:nth-child(5){animation-delay:.28s}
+.page-section.in-view .skills-grid .skill-category:nth-child(6){animation-delay:.34s}
+
+.page-section.in-view .ach-stack .ach-card:nth-child(1){animation-delay:.05s}
+.page-section.in-view .ach-stack .ach-card:nth-child(2){animation-delay:.14s}
+.page-section.in-view .ach-stack .ach-card:nth-child(3){animation-delay:.23s}
+.page-section.in-view .ach-stack .ach-card:nth-child(4){animation-delay:.32s}
+
+.page-section.in-view .project-grid .project-card:nth-child(1){animation-delay:.04s}
+.page-section.in-view .project-grid .project-card:nth-child(2){animation-delay:.11s}
+.page-section.in-view .project-grid .project-card:nth-child(3){animation-delay:.18s}
+.page-section.in-view .project-grid .project-card:nth-child(4){animation-delay:.25s}
+.page-section.in-view .project-grid .project-card:nth-child(5){animation-delay:.32s}
+
+/* Individual skill tags cascade in on top of their category card —
+   up to 20 per category covers every category in this page (max 17).
+   Anything beyond position 20 simply shares the last delay. */
+.page-section .skill-tags .tag{opacity:0}
+.page-section.in-view .skill-tags .tag{animation:cardRise .45s cubic-bezier(.16,1,.3,1) both}
+.page-section.in-view .skill-tags .tag:nth-child(1){animation-delay:.1s}
+.page-section.in-view .skill-tags .tag:nth-child(2){animation-delay:.13s}
+.page-section.in-view .skill-tags .tag:nth-child(3){animation-delay:.16s}
+.page-section.in-view .skill-tags .tag:nth-child(4){animation-delay:.19s}
+.page-section.in-view .skill-tags .tag:nth-child(5){animation-delay:.22s}
+.page-section.in-view .skill-tags .tag:nth-child(6){animation-delay:.25s}
+.page-section.in-view .skill-tags .tag:nth-child(7){animation-delay:.28s}
+.page-section.in-view .skill-tags .tag:nth-child(8){animation-delay:.31s}
+.page-section.in-view .skill-tags .tag:nth-child(9){animation-delay:.34s}
+.page-section.in-view .skill-tags .tag:nth-child(10){animation-delay:.37s}
+.page-section.in-view .skill-tags .tag:nth-child(11){animation-delay:.4s}
+.page-section.in-view .skill-tags .tag:nth-child(12){animation-delay:.43s}
+.page-section.in-view .skill-tags .tag:nth-child(13){animation-delay:.46s}
+.page-section.in-view .skill-tags .tag:nth-child(14){animation-delay:.49s}
+.page-section.in-view .skill-tags .tag:nth-child(15){animation-delay:.52s}
+.page-section.in-view .skill-tags .tag:nth-child(16){animation-delay:.55s}
+.page-section.in-view .skill-tags .tag:nth-child(n+17){animation-delay:.58s}
+
+.page-section .contact-grid .contact-item{opacity:0}
+.page-section.in-view .contact-grid .contact-item{animation:cardRise .6s cubic-bezier(.16,1,.3,1) both}
+.page-section.in-view .contact-grid .contact-item:nth-child(1){animation-delay:.05s}
+.page-section.in-view .contact-grid .contact-item:nth-child(2){animation-delay:.14s}
+.page-section.in-view .contact-grid .contact-item:nth-child(3){animation-delay:.23s}
+.page-section.in-view .contact-grid .contact-item:nth-child(4){animation-delay:.32s}
 
 .section-toggle{
   width:100%;display:flex;align-items:center;gap:18px;padding:20px 24px;
@@ -303,6 +491,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 }
 .section-toggle:hover{border-color:var(--accent)}
 .section-num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:600;flex-shrink:0}
+.page-section.in-view .section-num{animation:numGlow .9s ease}
+@keyframes numGlow{
+  0%{text-shadow:0 0 0 rgba(var(--accent-rgb),0)}
+  40%{text-shadow:0 0 10px rgba(var(--accent-rgb),.9)}
+  100%{text-shadow:0 0 0 rgba(var(--accent-rgb),0)}
+}
 .section-title-group{flex:1}
 .section-title-group h2{font-size:19px}
 .section-sub{font-size:12.5px;color:var(--text-mute);margin-top:2px}
@@ -330,7 +524,19 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .timeline{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--accent-border);margin-left:6px;padding-left:26px}
 .timeline-item{position:relative;padding-bottom:22px}
 .timeline-item:last-child{padding-bottom:0}
-.timeline-item::before{content:'';position:absolute;left:-32px;top:4px;width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--bg3)}
+.timeline-item::before{
+  content:'';position:absolute;left:-32px;top:4px;width:11px;height:11px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 0 4px var(--bg3);
+  animation:timelineNodePulse 3.2s ease-in-out infinite;
+}
+.timeline-item:nth-child(1)::before{animation-delay:0s}
+.timeline-item:nth-child(2)::before{animation-delay:.5s}
+.timeline-item:nth-child(3)::before{animation-delay:1s}
+.timeline-item:nth-child(4)::before{animation-delay:1.5s}
+@keyframes timelineNodePulse{
+  0%,40%,100%{box-shadow:0 0 0 4px var(--bg3),0 0 0 0 rgba(var(--accent-rgb),0)}
+  15%{box-shadow:0 0 0 4px var(--bg3),0 0 14px 3px rgba(var(--accent-rgb),.85)}
+}
 .timeline-company{font-weight:700;color:var(--text-hi);font-size:14.5px}
 .timeline-role{font-size:13.5px;color:var(--accent-2);margin-top:1px}
 .timeline-dates{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-mute);margin-top:3px}
@@ -626,8 +832,8 @@ a.c-link.contact-item{
   .edu-item,.skill-category,a.c-link.contact-item,.bento-tile{background:var(--panel2)}
 }
 
-[data-theme="original"] .stat-card,[data-theme="original"] .qr-card{animation:goldBreath 4.5s ease-in-out infinite}
-@keyframes goldBreath{0%,100%{box-shadow:var(--shadow-card)}50%{box-shadow:var(--shadow-card),0 0 22px rgba(var(--accent-rgb),.22)}}
+[data-theme="original"] .stat-card,[data-theme="original"] .qr-card{animation:goldBreath 3.6s ease-in-out infinite}
+@keyframes goldBreath{0%,100%{box-shadow:var(--shadow-card)}50%{box-shadow:var(--shadow-card),0 0 16px rgba(var(--accent-rgb),.35),0 0 34px rgba(var(--accent-rgb),.2)}}
 
 /* ============================================================
    THEME 1 — SKEUOMORPHISM
@@ -653,8 +859,8 @@ a.c-link.contact-item{
 [data-theme="skeuomorphism"] .exp-card,[data-theme="skeuomorphism"] .project-card,[data-theme="skeuomorphism"] .ach-card,[data-theme="skeuomorphism"] .cred{position:relative;overflow:hidden}
 [data-theme="skeuomorphism"] .exp-card::after,[data-theme="skeuomorphism"] .project-card::after,[data-theme="skeuomorphism"] .ach-card::after,[data-theme="skeuomorphism"] .cred::after{
   content:'';position:absolute;top:0;left:-160%;width:55%;height:100%;pointer-events:none;
-  background:linear-gradient(100deg,transparent,rgba(255,255,255,.09),transparent);
-  animation:metalGleam 7s ease-in-out infinite;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.24),transparent);
+  animation:metalGleam 6s ease-in-out infinite;
 }
 @keyframes metalGleam{0%,78%,100%{left:-160%}42%{left:160%}}
 
@@ -678,10 +884,10 @@ a.c-link.contact-item{
 }
 [data-theme="neomorphism"] .theme-btn[aria-pressed="true"]{box-shadow:inset 4px 4px 10px rgba(0,0,0,.5), inset -4px -4px 10px rgba(255,255,255,.02);background:none}
 [data-theme="neomorphism"] .tag,[data-theme="neomorphism"] .availability-chip{box-shadow:3px 3px 7px rgba(0,0,0,.5),-3px -3px 7px rgba(255,255,255,.02)}
-[data-theme="neomorphism"] .stat-card,[data-theme="neomorphism"] .cred,[data-theme="neomorphism"] .ach-card{animation:softBreath 5.5s ease-in-out infinite}
+[data-theme="neomorphism"] .stat-card,[data-theme="neomorphism"] .cred,[data-theme="neomorphism"] .ach-card{animation:softBreath 4.5s ease-in-out infinite}
 @keyframes softBreath{
-  0%,100%{box-shadow:8px 8px 18px rgba(0,0,0,.55), -8px -8px 18px rgba(255,255,255,.025)}
-  50%{box-shadow:5px 5px 12px rgba(0,0,0,.45), -5px -5px 12px rgba(255,255,255,.018)}
+  0%,100%{box-shadow:9px 9px 20px rgba(0,0,0,.6), -9px -9px 20px rgba(255,255,255,.03)}
+  50%{box-shadow:3px 3px 8px rgba(0,0,0,.4), -3px -3px 8px rgba(255,255,255,.012)}
 }
 
 /* ============================================================
@@ -702,11 +908,11 @@ a.c-link.contact-item{
     radial-gradient(circle at 85% 15%, rgba(94,224,224,.32), transparent 42%),
     radial-gradient(circle at 50% 90%, rgba(232,109,193,.3), transparent 45%);
   background-attachment:fixed;
-  animation:blobDrift 24s ease-in-out infinite alternate;
+  animation:blobDrift 15s ease-in-out infinite alternate;
 }
 @keyframes blobDrift{
   0%{background-position:0% 0%,0% 0%,0% 0%}
-  100%{background-position:7% 9%,-8% 6%,5% -7%}
+  100%{background-position:16% 20%,-18% 14%,12% -16%}
 }
 
 /* ============================================================
@@ -754,12 +960,10 @@ a.c-link.contact-item{
 [data-theme="minimalism"] .btn-primary:hover{background:transparent;color:var(--accent);border:1px solid var(--accent)}
 [data-theme="minimalism"] .tag{background:transparent}
 [data-theme="minimalism"] .theme-swatch[data-swatch="minimalism"]{background:#fafaf9}
-[data-theme="minimalism"] .nav-links a{position:relative}
-[data-theme="minimalism"] .nav-links a::after{
-  content:'';position:absolute;left:0;bottom:-4px;width:0;height:1px;background:var(--accent);
-  transition:width .25s cubic-bezier(.4,0,.2,1);
-}
-[data-theme="minimalism"] .nav-links a:hover::after,[data-theme="minimalism"] .nav-links a.active-link::after{width:100%}
+/* Minimalism keeps its underline deliberately flat and thin — no glow,
+   no gradient — restraint is still its signature even now that every
+   other theme shares the same underline mechanic. */
+[data-theme="minimalism"] .nav-links a::after{background:var(--accent);height:1px;box-shadow:none}
 
 
 /* ============================================================
@@ -821,6 +1025,7 @@ a.c-link.contact-item{
 }
 [data-theme="brutalism"] .nav-logo::after{content:'_';margin-left:2px;animation:cursorBlink 1s steps(1) infinite}
 [data-theme="brutalism"] .nav-inner{border:3px solid #000;box-shadow:none;border-radius:0}
+[data-theme="brutalism"] .nav-links a::after{background:#000;box-shadow:none;height:3px;transition:width .12s steps(4)}
 [data-theme="brutalism"] .section-toggle,
 [data-theme="brutalism"] .exp-card,[data-theme="brutalism"] .stat-card,[data-theme="brutalism"] .cred,
 [data-theme="brutalism"] .ach-card,[data-theme="brutalism"] .project-card,[data-theme="brutalism"] .edu-item,
@@ -834,7 +1039,8 @@ a.c-link.contact-item{
 [data-theme="brutalism"] .badge-latest,[data-theme="brutalism"] .exp-role .tag{background:#ffe600;color:#000;border:2px solid #000}
 [data-theme="brutalism"] .tag.hi{background:#ffe600;color:#000;border-color:#000;font-weight:700}
 [data-theme="brutalism"] .availability-chip{background:#fff;border:2px solid #000}
-[data-theme="brutalism"] .availability-chip .dot{background:#000;animation:none;box-shadow:none}
+[data-theme="brutalism"] .availability-chip .dot{background:#000;animation:brutalBlink 1.6s steps(1) infinite;box-shadow:none}
+@keyframes brutalBlink{0%,60%{opacity:1}61%,100%{opacity:.15}}
 [data-theme="brutalism"] .photo-frame{filter:grayscale(1) contrast(1.15);clip-path:none;background:#000;border:3px solid #000}
 [data-theme="brutalism"] .corner-deco,[data-theme="brutalism"] .dot-deco,[data-theme="brutalism"] .scan-line{display:none}
 [data-theme="brutalism"] .tag{border-radius:0!important;border-color:#000;background:transparent}
@@ -861,11 +1067,11 @@ a.c-link.contact-item{
   background-attachment:fixed;
 }
 [data-theme="liquid-glass"] .exp-card,[data-theme="liquid-glass"] .stat-card,[data-theme="liquid-glass"] .ach-card,[data-theme="liquid-glass"] .cred{
-  animation:wetShimmer 4.5s ease-in-out infinite;
+  animation:wetShimmer 3.8s ease-in-out infinite;
 }
 @keyframes wetShimmer{
-  0%,100%{box-shadow:inset 0 2px 0 rgba(255,255,255,.5), 0 8px 30px rgba(0,0,0,.5)}
-  50%{box-shadow:inset 0 2px 0 rgba(255,255,255,.8), 0 8px 30px rgba(0,0,0,.5)}
+  0%,100%{box-shadow:inset 0 2px 0 rgba(255,255,255,.45), 0 8px 30px rgba(0,0,0,.5), 0 0 0 rgba(var(--accent-rgb),0)}
+  50%{box-shadow:inset 0 3px 0 rgba(255,255,255,.9), 0 8px 30px rgba(0,0,0,.5), 0 0 20px rgba(var(--accent-rgb),.25)}
 }
 
 /* ============================================================
@@ -900,11 +1106,11 @@ a.c-link.contact-item{
   background-image:linear-gradient(160deg, rgba(143,162,255,.16), transparent 55%),
     radial-gradient(circle at 85% 80%, rgba(100,120,224,.2), transparent 50%);
   background-attachment:fixed;
-  animation:spatialDrift 28s ease-in-out infinite alternate;
+  animation:spatialDrift 18s ease-in-out infinite alternate;
 }
 @keyframes spatialDrift{
   0%{background-position:0% 0%,0% 0%}
-  100%{background-position:-6% 7%,8% -5%}
+  100%{background-position:-14% 16%,18% -12%}
 }
 
 /* ============================================================
